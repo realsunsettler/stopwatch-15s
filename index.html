@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dramatic Stopwatch</title>
+    <style>
+        @font-face {
+            font-family: 'DMMono';
+            src: url('DMMono-Medium.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'DMMono', monospace;
+            background-color: black;
+            transition: background-color 0.1s linear;
+        }
+        #stopwatch {
+            font-size: 80px;
+            font-weight: bold;
+            text-align: center;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        #stopwatch .milliseconds {
+            color: #666;
+        }
+        #instructions {
+            position: absolute;
+            display: none;
+            bottom: 20px;
+            text-align: center;
+            font-size: 18px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div id="stopwatch">00:00:00.<span class="milliseconds">000</span></div>
+    <div id="instructions">Press Space to start/reset</div>
+
+    <script>
+        let maxTime = 15;
+        let redTime = 11;
+        let startTime;
+        let interval;
+        let running = false;
+        let paused = false;
+
+        function updateDisplay(time) {
+            const hours = Math.floor(time / 3600000).toString().padStart(2, '0');
+            const minutes = Math.floor((time % 3600000) / 60000).toString().padStart(2, '0');
+            const seconds = Math.floor((time % 60000) / 1000).toString().padStart(2, '0');
+            const milliseconds = (time % 1000).toString().padStart(3, '0');
+            document.getElementById('stopwatch').innerHTML = `${hours}:${minutes}:${seconds}.<span class="milliseconds">${milliseconds}</span>`;
+        }
+
+        function updateBackgroundColor(elapsedSeconds) {
+            if (elapsedSeconds >= redTime && elapsedSeconds < maxTime) {
+                const intensity = (elapsedSeconds - redTime) / (maxTime - redTime); // 0 to 1 over 4 seconds
+                const red = Math.floor(intensity * 255);
+                console.log(red);
+                document.body.style.backgroundColor = `rgb(${red}, 0, 0)`;
+            } else if (elapsedSeconds >= maxTime) {
+                document.body.style.backgroundColor = 'red';
+            } else {
+                document.body.style.backgroundColor = 'black';
+            }
+        }
+
+        function startStopwatch() {
+            startTime = Date.now();
+            interval = setInterval(() => {
+                if (!paused) {
+                    const currentTime = Date.now() - startTime;
+                    const elapsedSeconds = currentTime / 1000;
+                    updateDisplay(currentTime);
+                    updateBackgroundColor(elapsedSeconds);
+                    if (elapsedSeconds >= maxTime) {
+                        pauseStopwatch();
+                    }
+                }
+            }, 10);
+            running = true;
+        }
+
+        function resetStopwatch() {
+            if (running && !paused) {
+                clearInterval(interval);
+                startStopwatch();
+            } else if (!running) {
+                startStopwatch();
+            }
+        }
+
+        function pauseStopwatch() {
+            clearInterval(interval);
+            paused = true;
+            document.getElementById('instructions').textContent = "Time's up! Refresh to start over.";
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (event.code === 'Space' && !paused) {
+                event.preventDefault();
+                resetStopwatch();
+            }
+        });
+
+        updateDisplay(0);
+    </script>
+</body>
+</html>
